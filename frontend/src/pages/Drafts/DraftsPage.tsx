@@ -1,0 +1,1 @@
+export const DraftsPage = () => <h1 className="text-3xl font-semibold">Draft Editor</h1>;

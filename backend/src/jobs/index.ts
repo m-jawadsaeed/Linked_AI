@@ -1,0 +1,1 @@
+export const jobs = ["image-generation", "embeddings", "publishing", "analytics", "scheduling"];

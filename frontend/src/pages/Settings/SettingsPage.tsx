@@ -1,0 +1,1 @@
+export const SettingsPage = () => <h1 className="text-3xl font-semibold">Settings</h1>;

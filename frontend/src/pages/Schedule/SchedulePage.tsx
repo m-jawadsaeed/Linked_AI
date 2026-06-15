@@ -1,0 +1,1 @@
+export const SchedulePage = () => <h1 className="text-3xl font-semibold">Schedule</h1>;

@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(uuid())
+  email          String         @unique
+  passwordHash   String
+  name           String
+  role           Role           @default(USER)
+  verifiedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  sessions       Session[]
+  refreshTokens  RefreshToken[]
+  oauthAccounts  OAuthAccount[]
+  writingProfile WritingProfile?
+  memories       Memory[]
+  chatSessions   ChatSession[]
+  drafts         Draft[]
+  posts          LinkedInPost[]
+  images         GeneratedImage[]
+  analytics      Analytics[]
+  scheduledPosts ScheduledPost[]
+  documents      Document[]
+  toolLogs       ToolLog[]
+
+  @@index([email, role])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  familyId   String
+  tokenHash  String   @unique
+  revokedAt  DateTime?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  replacedBy String?
+
+  @@index([userId, familyId])
+}
+
+model OAuthAccount {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  provider          String
+  providerAccountId String
+  accessToken       String?
+  refreshToken      String?
+
+  @@unique([provider, providerAccountId])
+}
+
+model WritingProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  tone         String
+  vocabulary   Json
+  storytelling String
+  emojiUsage   String
+  ctaStyle     String
+  formatting   String
+  hookStyle    String
+  updatedAt    DateTime @updatedAt
+}
+
+model Memory {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  key         String
+  value       Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, key])
+}
+
+model ChatSession {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  title     String
+  messages  Message[]
+  createdAt DateTime  @default(now())
+}
+
+model Message {
+  id            String      @id @default(uuid())
+  chatSessionId String
+  chatSession   ChatSession @relation(fields: [chatSessionId], references: [id])
+  role          String
+  content       String
+  createdAt     DateTime    @default(now())
+}
+
+model Draft {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  content   String
+  status    String   @default("draft")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LinkedInPost {
+  id              String      @id @default(uuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  draftId         String?
+  content         String
+  engagementScore Int
+  readability     Int
+  bestTime        String
+  hashtags        Hashtag[]
+  mentions        Mention[]
+  analytics       Analytics[]
+  createdAt       DateTime    @default(now())
+}
+
+model GeneratedImage {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  prompt    String
+  url       String
+  type      String
+  createdAt DateTime @default(now())
+}
+
+model Hashtag {
+  id      String       @id @default(uuid())
+  postId  String
+  post    LinkedInPost @relation(fields: [postId], references: [id])
+  tag     String
+  reach   Int
+  comp    Int
+  rel     Int
+}
+
+model Mention {
+  id      String       @id @default(uuid())
+  postId  String
+  post    LinkedInPost @relation(fields: [postId], references: [id])
+  value   String
+  kind    String
+}
+
+model Analytics {
+  id          String       @id @default(uuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  postId      String?
+  post        LinkedInPost? @relation(fields: [postId], references: [id])
+  impressions Int
+  reactions   Int
+  comments    Int
+  createdAt   DateTime     @default(now())
+}
+
+model ScheduledPost {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  content   String
+  runAt     DateTime
+  status    String   @default("scheduled")
+  createdAt DateTime @default(now())
+}
+
+model Document {
+  id        String          @id @default(uuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  name      String
+  mimeType  String
+  size      Int
+  chunks    DocumentChunk[]
+  createdAt DateTime        @default(now())
+}
+
+model DocumentChunk {
+  id         String      @id @default(uuid())
+  documentId String
+  document   Document    @relation(fields: [documentId], references: [id])
+  content    String
+  embedding  Embedding?
+}
+
+model Embedding {
+  id          String        @id @default(uuid())
+  chunkId     String        @unique
+  chunk       DocumentChunk @relation(fields: [chunkId], references: [id])
+  vectorStore String
+}
+
+model ToolLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  toolName  String
+  input     Json
+  output    Json
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
