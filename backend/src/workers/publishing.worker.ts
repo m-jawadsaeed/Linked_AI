@@ -1,8 +1,10 @@
 import { Worker } from "bullmq";
-import IORedis from "ioredis";
+import {Redis} from "ioredis";
 import { env } from "../config/env.js";
 
-const connection = new IORedis(env.REDIS_URL, { maxRetriesPerRequest: null });
+const connection = new Redis(env.REDIS_URL, {
+  maxRetriesPerRequest: null,
+});
 
 export const publishingWorker = new Worker(
   "publishing",
