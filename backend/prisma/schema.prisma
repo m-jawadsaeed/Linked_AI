@@ -227,3 +227,14 @@ enum Role {
   USER
   ADMIN
 }
+model Draft {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
